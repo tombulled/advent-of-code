@@ -1,3 +1,5 @@
+"""--- Day 1: Secret Entrance ---"""
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final, Iterable
@@ -7,12 +9,6 @@ DIAL_START: Final[int] = 50
 
 
 class Direction(str, Enum):
-    def __str__(self) -> str:
-        return self.value
-
-    def __repr__(self) -> str:
-        return f"<{self.name}>"
-
     LEFT = "L"
     RIGHT = "R"
 
@@ -40,9 +36,7 @@ def parse_rotation(rotation: str, /) -> Rotation:
     try:
         direction = Direction(raw_direction)
     except ValueError:
-        raise InvalidRotationError(
-            f"{raw_direction!r} is not a valid direction"
-        )
+        raise InvalidRotationError(f"{raw_direction!r} is not a valid direction")
 
     distance: int
     try:
@@ -76,34 +70,47 @@ def stream_rotation(position: int, rotation: Rotation) -> Iterable[int]:
         yield position
 
 
-### Part 1 ###
+def solve_part_1() -> int:
+    position: int = DIAL_START
+    zeroth_position_counter: int = 0
 
-position: int = DIAL_START
-zeroth_position_counter: int = 0
+    rotation: Rotation
+    for rotation in read_input():
+        position = apply_rotation(position, rotation)
 
-rotation: Rotation
-for rotation in read_input():
-    position = apply_rotation(position, rotation)
-
-    if position == 0:
-        zeroth_position_counter += 1
-
-print("Part 1:", zeroth_position_counter)
-assert zeroth_position_counter == 1076
-
-### Part 2 ###
-
-position: int = DIAL_START
-zeroth_position_counter: int = 0
-
-rotation: Rotation
-for rotation in read_input():
-    next_position: int
-    for next_position in stream_rotation(position, rotation):
-        if next_position == 0:
+        if position == 0:
             zeroth_position_counter += 1
 
-    position = next_position
+    return zeroth_position_counter
 
-print("Part 2:", zeroth_position_counter)
-assert zeroth_position_counter == 6379
+
+def solve_part_2() -> int:
+    position: int = DIAL_START
+    zeroth_position_counter: int = 0
+
+    rotation: Rotation
+    for rotation in read_input():
+        next_position: int
+        for next_position in stream_rotation(position, rotation):
+            if next_position == 0:
+                zeroth_position_counter += 1
+
+        position = next_position
+
+    return zeroth_position_counter
+
+
+def main() -> None:
+    ### Part 1 ###
+    part_1: int = solve_part_1()
+    print("Part 1:", part_1)
+    assert part_1 == 1076
+
+    ### Part 2 ###
+    part_2: int = solve_part_2()
+    print("Part 2:", part_2)
+    assert part_2 == 6379
+
+
+if __name__ == "__main__":
+    main()
