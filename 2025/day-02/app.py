@@ -1,6 +1,7 @@
+import math
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Collection, Final, Iterable
+from typing import Collection, Final, Iterable, Sequence
 
 ID_SEP: Final[str] = "-"
 RANGE_SEPS: Collection[str] = {",", "\n"}
@@ -11,6 +12,9 @@ RANGE_SEPS: Collection[str] = {",", "\n"}
 class Range:
     first_id: int
     last_id: int
+
+    def __iter__(self) -> Iterable[int]:
+        return iter(range(self.first_id, self.last_id))
 
 
 # I realise you could flip a boolean flag instead... but I like enums, sue me :shrug:
@@ -66,6 +70,29 @@ def read_input() -> Iterable[Range]:
                 break
 
 
-range: Range
-for range in read_input():
-    print(range)
+def int_len(integer: int, /) -> int:
+    if integer == 0:
+        return 1
+
+    return math.floor(math.log(abs(integer), 10) + 1)
+
+
+def int_split(integer: int, /) -> Sequence[int]:
+    return tuple(
+        ((integer // (10**index)) % 10)
+        for index in range(int_len(integer) - 1, -1, -1)
+    )
+
+
+# range_: Range
+# for range_ in read_input():
+#     print(range_)
+#     id_: int
+#     for id_ in range_:
+#         digits: Sequence[int] = int_split(id_)
+#         print(id_, digits)
+#         break
+#     break
+
+i = 82915517
+d = int_split(i)
