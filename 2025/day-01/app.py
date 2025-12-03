@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from typing import Final, Iterable
 from enum import Enum
-
+from typing import Final, Iterable
 
 DIAL_MAX: Final[int] = 99
 DIAL_START: Final[int] = 50
@@ -41,7 +40,9 @@ def parse_rotation(rotation: str, /) -> Rotation:
     try:
         direction = Direction(raw_direction)
     except ValueError:
-        raise InvalidRotationError(f"{raw_direction!r} is not a valid direction")
+        raise InvalidRotationError(
+            f"{raw_direction!r} is not a valid direction"
+        )
 
     distance: int
     try:
@@ -69,6 +70,14 @@ def apply_rotation(position: int, rotation: Rotation) -> int:
     return (position + multiplier * rotation.distance) % (DIAL_MAX + 1)
 
 
+def stream_rotation(position: int, rotation: Rotation) -> Iterable[int]:
+    for _ in range(rotation.distance):
+        position = apply_rotation(position, Rotation(rotation.direction, 1))
+        yield position
+
+
+### Part 1 ###
+
 position: int = DIAL_START
 zeroth_position_counter: int = 0
 
@@ -79,5 +88,22 @@ for rotation in read_input():
     if position == 0:
         zeroth_position_counter += 1
 
-print("Total Times at Position 0:", zeroth_position_counter)
+print("Part 1:", zeroth_position_counter)
 assert zeroth_position_counter == 1076
+
+### Part 2 ###
+
+position: int = DIAL_START
+zeroth_position_counter: int = 0
+
+rotation: Rotation
+for rotation in read_input():
+    next_position: int
+    for next_position in stream_rotation(position, rotation):
+        if next_position == 0:
+            zeroth_position_counter += 1
+
+    position = next_position
+
+print("Part 2:", zeroth_position_counter)
+assert zeroth_position_counter == 6379
