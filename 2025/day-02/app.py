@@ -124,16 +124,6 @@ def validate_id(id_: int, /) -> bool:
     # Don't you break out the word "quantum" on me. Life's too short to play that game
     return True
 
-def validate_id_2(id_: int) -> bool:
-    id_str: str = str(id_)
-    if len(id_str) % 2 != 0:
-        return True
-    first: str = id_str[:len(id_str)//2]
-    last: str = id_str[len(id_str)//2:]
-    if first != last:
-        return True
-    return False
-
 
 def solve_part_1() -> int:
     invalid_ids_sum: int = 0
@@ -145,44 +135,12 @@ def solve_part_1() -> int:
     for range_ in read_input():
         id_: int
         for id_ in range_:
-            valid_a: bool = validate_id(id_)
-            valid_b: bool = validate_id_2(id_)
-            if valid_a != valid_b:
-                print("DISAGREE ON:", id_, dict(valid_a=valid_a, valid_b=valid_b))
-            # if not validate_id(id_):
-            #     invalid_ids_sum += id_
+            if not validate_id(id_):
+                invalid_ids_sum += id_
 
     return invalid_ids_sum
 
-# def solve_part_1_approach_2() -> int:
-#     invalid_ids_sum: int = 0
 
-#     range_: Range
-#     for range_ in read_input():
-#         # print(range_) # TODO
-#         id_: int
-#         for id_ in range_:
-#             id_str: str = str(id_)
-#             if len(id_str) % 2 != 0:
-#                 # print(id_str, "has an odd length, skipping.")
-#                 continue
-#             first: str = id_str[:len(id_str)//2]
-#             last: str = id_str[len(id_str)//2:]
-#             if first != last:
-#                 continue
-#             # print("INVALID:", id_str)
-#             invalid_ids_sum += int(id_)
-#             # print(id_str, "has an even length")
-#             # break
-#         # break
-
-#     return invalid_ids_sum
-
-# 18596663903 is too high
-
-part_1_a: int = solve_part_1()
-print("Part 1 (a):", part_1_a)
-
-# part_1_b: int = solve_part_1_approach_2()
-# print("Part 1 (b):", part_1_b)
-# assert part_1_b == 18595663903 # correct
+part_1: int = solve_part_1()
+print("Part 1:", part_1)
+assert part_1 == 18595663903
