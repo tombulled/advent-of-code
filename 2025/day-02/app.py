@@ -80,7 +80,7 @@ def int_len(integer: int, /) -> int:
         return 1
 
     # Pick that log up off the floor! Do you live in a barn!?
-    return math.floor(math.log(integer, 10) + 1)
+    return math.floor(math.log10(integer) + 1)
 
 
 def int_split(integer: int, /) -> Sequence[int]:
@@ -92,13 +92,13 @@ def int_split(integer: int, /) -> Sequence[int]:
 
 
 def int_join(a: int, b: int, /) -> int:
-    # So engrossed in whether we could, we never stopped to think whether we should.
-    # But *could* is enough reason for me.
+    # So engrossed in whether we could, we forgot to question whether we should.
+    # But *could* is enough reason for me lol
     return a * 10 ** int_len(b) + b
 
 
 def int_join_all(integers: Sequence[int], /) -> int:
-    # I wrote the program, so I no this never happens... I just wouldn't be able to sleep
+    # I wrote the program, so I know this never happens... I just wouldn't be able to sleep
     # at night otherwise.
     if len(integers) == 0:
         raise ValueError("No integers to join")
@@ -107,7 +107,7 @@ def int_join_all(integers: Sequence[int], /) -> int:
 
 
 def validate_id(id_: int, /) -> bool:
-    # If its got an off number of digits, then you can't have a sequence repeated twice (must be valid.)
+    # If its got an odd number of digits, then you can't have a sequence repeated twice duh
     if int_len(id_) % 2 != 0:
         return True
 
@@ -124,20 +124,65 @@ def validate_id(id_: int, /) -> bool:
     # Don't you break out the word "quantum" on me. Life's too short to play that game
     return True
 
+def validate_id_2(id_: int) -> bool:
+    id_str: str = str(id_)
+    if len(id_str) % 2 != 0:
+        return True
+    first: str = id_str[:len(id_str)//2]
+    last: str = id_str[len(id_str)//2:]
+    if first != last:
+        return True
+    return False
 
-invalid_ids_sum: int = 0
 
-# This algorithm is NOT efficient - if I can be asked, I'll come back and reimplement it.
-# You should only need to check values that are known to be invalid within the range, rather
-# than checking everything.
-range_: Range
-for range_ in read_input():
-    print(range_)
-    id_: int
-    for id_ in range_:
-        if not validate_id(id_):
-            print(id_)
-            invalid_ids_sum += id_
-    print()
+def solve_part_1() -> int:
+    invalid_ids_sum: int = 0
 
-print("Part 1:", invalid_ids_sum) # 18596663903 is too high
+    # This algorithm is NOT efficient - if I can be asked, I'll come back and reimplement it.
+    # You should only need to check values that are known to be invalid within the range, rather
+    # than checking everything.
+    range_: Range
+    for range_ in read_input():
+        id_: int
+        for id_ in range_:
+            valid_a: bool = validate_id(id_)
+            valid_b: bool = validate_id_2(id_)
+            if valid_a != valid_b:
+                print("DISAGREE ON:", id_, dict(valid_a=valid_a, valid_b=valid_b))
+            # if not validate_id(id_):
+            #     invalid_ids_sum += id_
+
+    return invalid_ids_sum
+
+# def solve_part_1_approach_2() -> int:
+#     invalid_ids_sum: int = 0
+
+#     range_: Range
+#     for range_ in read_input():
+#         # print(range_) # TODO
+#         id_: int
+#         for id_ in range_:
+#             id_str: str = str(id_)
+#             if len(id_str) % 2 != 0:
+#                 # print(id_str, "has an odd length, skipping.")
+#                 continue
+#             first: str = id_str[:len(id_str)//2]
+#             last: str = id_str[len(id_str)//2:]
+#             if first != last:
+#                 continue
+#             # print("INVALID:", id_str)
+#             invalid_ids_sum += int(id_)
+#             # print(id_str, "has an even length")
+#             # break
+#         # break
+
+#     return invalid_ids_sum
+
+# 18596663903 is too high
+
+part_1_a: int = solve_part_1()
+print("Part 1 (a):", part_1_a)
+
+# part_1_b: int = solve_part_1_approach_2()
+# print("Part 1 (b):", part_1_b)
+# assert part_1_b == 18595663903 # correct
