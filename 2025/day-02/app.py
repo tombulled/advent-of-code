@@ -3,6 +3,7 @@ import math
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Collection, Final, Iterable, Sequence
+import itertools
 
 ID_SEP: Final[str] = "-"
 RANGE_SEPS: Collection[str] = {",", "\n"}
@@ -124,6 +125,27 @@ def validate_id(id_: int, /) -> bool:
     # Don't you break out the word "quantum" on me. Life's too short to play that game
     return True
 
+def validate_id_part_2(id_: int, /) -> bool:
+    digits: Sequence[int] = int_split(id_)
+
+    max_sequence_length: int = len(digits) // 2
+
+    sequence_length: int
+    for sequence_length in range(1, max_sequence_length + 1):
+        sequence_digits: Sequence[int] = digits[:sequence_length]
+        sequence: int = int_join_all(sequence_digits)
+
+        batch_digits: Sequence[int]
+        for batch_digits in itertools.batched(digits, sequence_length):
+            batch: int = int_join_all(batch_digits)
+
+            if sequence != batch:
+                break
+        else:
+            return False
+
+    return True
+
 
 def solve_part_1() -> int:
     invalid_ids_sum: int = 0
@@ -140,7 +162,23 @@ def solve_part_1() -> int:
 
     return invalid_ids_sum
 
+def solve_part_2() -> int:
+    invalid_ids_sum: int = 0
+
+    range_: Range
+    for range_ in read_input():
+        id_: int
+        for id_ in range_:
+            if not validate_id_part_2(id_):
+                invalid_ids_sum += id_
+
+    return invalid_ids_sum
+
 
 part_1: int = solve_part_1()
 print("Part 1:", part_1)
 assert part_1 == 18595663903
+
+part_2: int = solve_part_2()
+print("Part 2:", part_2)
+assert part_2 == 19058204438
