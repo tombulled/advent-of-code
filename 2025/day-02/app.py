@@ -1,9 +1,10 @@
 import functools
+import itertools
 import math
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Collection, Final, Iterable, Sequence
-import itertools
+from typing import Collection, Final, Sequence
 
 ID_SEP: Final[str] = "-"
 RANGE_SEPS: Collection[str] = {",", "\n"}
@@ -11,11 +12,11 @@ RANGE_SEPS: Collection[str] = {",", "\n"}
 
 # A tuple would work too... but memory isn't going to use itself
 @dataclass
-class Range:
+class Range(Iterable):
     first_id: int
     last_id: int
 
-    def __iter__(self) -> Iterable[int]:
+    def __iter__(self) -> Iterator[int]:
         # First ID and Last ID *inclusive*
         return iter(range(self.first_id, self.last_id + 1))
 
@@ -87,8 +88,7 @@ def int_len(integer: int, /) -> int:
 def int_split(integer: int, /) -> Sequence[int]:
     # I could've modelled the IDs as strings, but where's the fun in that.
     return tuple(
-        ((integer // (10**index)) % 10)
-        for index in range(int_len(integer) - 1, -1, -1)
+        (integer // (10**index)) % 10 for index in range(int_len(integer) - 1, -1, -1)
     )
 
 
@@ -125,6 +125,7 @@ def validate_id(id_: int, /) -> bool:
     # Don't you break out the word "quantum" on me. Life's too short to play that game
     return True
 
+
 def validate_id_part_2(id_: int, /) -> bool:
     digits: Sequence[int] = int_split(id_)
 
@@ -135,10 +136,12 @@ def validate_id_part_2(id_: int, /) -> bool:
         sequence_digits: Sequence[int] = digits[:sequence_length]
         sequence: int = int_join_all(sequence_digits)
 
+        # Ok where has `itertools.batched` been my whole life. I'm feeling butterflies
         batch_digits: Sequence[int]
         for batch_digits in itertools.batched(digits, sequence_length):
             batch: int = int_join_all(batch_digits)
 
+            # Why check all of them? Something something fail fast
             if sequence != batch:
                 break
         else:
@@ -153,6 +156,7 @@ def solve_part_1() -> int:
     # This algorithm is NOT efficient - if I can be asked, I'll come back and reimplement it.
     # You should only need to check values that are known to be invalid within the range, rather
     # than checking everything.
+    # And yes, I realise I could do this all in one big sum(...), but can != should
     range_: Range
     for range_ in read_input():
         id_: int
@@ -162,9 +166,12 @@ def solve_part_1() -> int:
 
     return invalid_ids_sum
 
+
 def solve_part_2() -> int:
     invalid_ids_sum: int = 0
 
+    # This logic is identical to that in `solve_part_1` just with a different validation function.
+    # I probably should've followed DRY. I probably should've followed DRY.
     range_: Range
     for range_ in read_input():
         id_: int
@@ -175,10 +182,17 @@ def solve_part_2() -> int:
     return invalid_ids_sum
 
 
-part_1: int = solve_part_1()
-print("Part 1:", part_1)
-assert part_1 == 18595663903
+def main() -> None:
+    ### Part 1 ###
+    part_1: int = solve_part_1()
+    print("Part 1:", part_1)
+    assert part_1 == 18595663903
 
-part_2: int = solve_part_2()
-print("Part 2:", part_2)
-assert part_2 == 19058204438
+    ### Part 2 ###
+    part_2: int = solve_part_2()
+    print("Part 2:", part_2)
+    assert part_2 == 19058204438
+
+
+if __name__ == "__main__":
+    main()
