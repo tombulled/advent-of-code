@@ -1,19 +1,24 @@
 """--- Day 3: Lobby ---"""
 
+import functools
 import math
-from typing import Iterable, NamedTuple, Sequence, TypeAlias
+from typing import (
+    Final,
+    Iterable,
+    NamedTuple,
+    Sequence,
+    TypeAlias,
+)
 
 Battery: TypeAlias = int  # joltage
 Bank: TypeAlias = Sequence[Battery]
+
+MAX_JOLTAGE: Final[int] = 9
 
 
 class IndexedBattery(NamedTuple):
     battery: Battery
     index: int
-
-
-class InvalidBankError(Exception):
-    pass
 
 
 def parse_bank(bank: str, /) -> Bank:
@@ -39,56 +44,128 @@ def int_join(a: int, b: int, /) -> int:
     return a * 10 ** int_len(b) + b
 
 
+def int_join_all(integers: Iterable[int], /) -> int:
+    return functools.reduce(int_join, integers)
+
+
 def find_first_battery_with_highest_joltage(bank: Bank, /) -> IndexedBattery:
+    # print(
+    #     f"find_first_battery_with_highest_joltage({''.join(map(str, bank))!r})"
+    # )
     highest_index: int = 0
     highest_battery: Battery = bank[0]
 
     index: int
     battery: Battery
     for index, battery in enumerate(bank[1:]):
+        # If this battery doesn't have as many jolts, ignore it.
         if battery <= highest_battery:
             continue
 
+        # New winner!
         highest_index = index + 1
         highest_battery = battery
+
+        # Nice little optimisation: If the battery has the maximum possible voltage, we can exit early.
+        if highest_battery == MAX_JOLTAGE:
+            break
 
     return IndexedBattery(highest_battery, highest_index)
 
 
-def find_primary_battery(bank: Bank, /) -> IndexedBattery:
-    return find_first_battery_with_highest_joltage(bank[:-1])
+def find_batteries_to_turn_on(
+    bank: Bank, count: int
+) -> Iterable[IndexedBattery]:
+    bank_len: int = len(bank)
+    offset: int = 0
+
+    total_batteries_left_to_find: int
+    for total_batteries_left_to_find in range(count, 0, -1):
+        # Create a subset of the bank, covering the valid search space.
+        sub_bank: Bank = bank[
+            offset : bank_len - total_batteries_left_to_find + 1
+        ]
+
+        # Find the first battery with the highest joltage within the sub-bank (the search space)
+        battery: IndexedBattery = find_first_battery_with_highest_joltage(
+            sub_bank
+        )
+
+        # Calculate the true battery index (taking into account the offset)
+        true_battery_index: int = offset + battery.index
+
+        # from pprint import pprint as pp
+
+        # pp(
+        #     dict(
+        #         total_batteries_left_to_find=total_batteries_left_to_find,
+        #         sub_bank=sub_bank,
+        #         battery=battery,
+        #         true_battery_index=true_battery_index,
+        #         offset=offset,
+        #     )
+        # )
+
+        # Update the index offset now that our search space has shrunk
+        offset = true_battery_index + 1
+
+        # Yield the battery with a fixed index
+        yield IndexedBattery(battery.battery, true_battery_index)
 
 
-def find_secondary_battery(
-    bank: Bank, /, *, primary_battery_index: int | None = None
-) -> IndexedBattery:
-    if primary_battery_index is None:
-        primary_battery_index = find_primary_battery(bank).index
+# def find_primary_battery(bank: Bank, /) -> IndexedBattery:
+#     return find_first_battery_with_highest_joltage(bank[:-1])
 
-    index_offset: int = primary_battery_index + 1
-    secondary_battery: IndexedBattery = find_first_battery_with_highest_joltage(
-        bank[index_offset:]
+
+# def find_secondary_battery(
+#     bank: Bank, /, *, primary_battery_index: int | None = None
+# ) -> IndexedBattery:
+#     if primary_battery_index is None:
+#         primary_battery_index = find_primary_battery(bank).index
+
+#     index_offset: int = primary_battery_index + 1
+#     secondary_battery: IndexedBattery = find_first_battery_with_highest_joltage(
+#         bank[index_offset:]
+#     )
+
+#     return IndexedBattery(
+#         secondary_battery.battery, index_offset + secondary_battery.index
+#     )
+
+
+# def calc_max_bank_joltage(bank: Bank, /) -> int:
+#     primary_battery: IndexedBattery = find_primary_battery(bank)
+#     secondary_battery: IndexedBattery = find_secondary_battery(
+#         bank, primary_battery_index=primary_battery.index
+#     )
+
+#     return int_join(primary_battery.battery, secondary_battery.battery)
+
+
+def calc_max_bank_joltage(bank: Bank, count: int) -> int:
+    return int_join_all(
+        battery.battery for battery in find_batteries_to_turn_on(bank, count)
     )
-
-    return IndexedBattery(
-        secondary_battery.battery, index_offset + secondary_battery.index
-    )
-
-
-def calc_max_bank_joltage(bank: Bank, /) -> int:
-    primary_battery: IndexedBattery = find_primary_battery(bank)
-    secondary_battery: IndexedBattery = find_secondary_battery(
-        bank, primary_battery_index=primary_battery.index
-    )
-
-    return int_join(primary_battery.battery, secondary_battery.battery)
 
 
 def solve_part_1() -> int:
-    return sum(calc_max_bank_joltage(bank) for bank in read_input())
+    return sum(calc_max_bank_joltage(bank, 2) for bank in read_input())
+    
+def solve_part_2() -> int:
+    return sum(calc_max_bank_joltage(bank, 12) for bank in read_input())
 
 
 ### Part 1 ###
 part_1: int = solve_part_1()
 print("Part 1:", part_1)
 assert part_1 == 17095
+
+### Part 2 ###
+part_2: int = solve_part_2()
+print("Part 2:", part_2)
+assert part_2 == 168794698570517
+
+# bank = parse_bank("987654321111111")
+# for b in find_batteries_to_turn_on(bank, count=12):
+#     print(b)
+#     print()
