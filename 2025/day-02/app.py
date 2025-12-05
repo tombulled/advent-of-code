@@ -1,3 +1,5 @@
+"""--- Day 2: Gift Shop ---"""
+
 import functools
 import itertools
 import math
