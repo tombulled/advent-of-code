@@ -12,7 +12,7 @@ MAX_JOLTAGE: Final[int] = 9
 
 class IndexedBattery(NamedTuple):
     battery: Battery
-    index: int
+    index_: int
 
 
 def parse_bank(bank: str, /) -> Bank:
@@ -77,7 +77,7 @@ def find_batteries_to_turn_on(bank: Bank, count: int) -> Iterable[IndexedBattery
         battery: IndexedBattery = find_first_battery_with_highest_joltage(sub_bank)
 
         # Calculate the true battery index (taking into account the offset)
-        true_battery_index: int = offset + battery.index
+        true_battery_index: int = offset + battery.index_
 
         # Update the index offset now that our search space has shrunk
         offset = true_battery_index + 1
