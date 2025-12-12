@@ -7,8 +7,9 @@ from typing import (
     MutableSequence,
     NamedTuple,
     Sequence,
-    Tuple,
 )
+
+MAX_ADJACENT_ROLLS: int = 3
 
 
 class CellType(str, Enum):
@@ -31,9 +32,6 @@ class Grid[T]:
 
     def __init__(self, data: Sequence[Sequence[T]], /) -> None:
         self._data = data
-
-    # def __repr__(self) -> str:
-    #     return f"{type(self).__name__}(size={self.size})"
 
     def __getitem__(self, index: int, /) -> Sequence[T]:
         return self._data[index]
@@ -82,9 +80,9 @@ class Grid[T]:
     def size_y(self) -> int:
         return len(self._data)
 
-    @property
-    def size(self) -> Tuple[int, int]:
-        return (self.size_x, self.size_y)
+    # @property
+    # def size(self) -> Tuple[int, int]:
+    #     return (self.size_x, self.size_y)
 
 
 def read_input() -> Grid[str]:
@@ -95,10 +93,7 @@ def read_input() -> Grid[str]:
         return Grid(rows)
 
 
-def solve_part_1() -> int:
-    grid: Grid[str] = read_input()
-    total_rolls_accessible_by_forklift: int = 0
-
+def find_accessible_rolls(grid: Grid[str], /) -> Iterable[Coord]:
     coord: Coord
     value: str
     for coord, value in grid:
@@ -112,11 +107,15 @@ def solve_part_1() -> int:
             for _, value in grid.get_surrounding(*coord)
         )
 
-        if total_adjacent_rolls < 4:
-            total_rolls_accessible_by_forklift += 1
+        if total_adjacent_rolls <= MAX_ADJACENT_ROLLS:
+            yield coord
 
-    return total_rolls_accessible_by_forklift
-    
+
+def solve_part_1() -> int:
+    grid: Grid[str] = read_input()
+
+    return sum(1 for _ in find_accessible_rolls(grid))
+
 
 ### Part 1 ###
 part_1: int = solve_part_1()
