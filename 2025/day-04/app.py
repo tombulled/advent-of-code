@@ -1,13 +1,7 @@
 """--- Day 4: Printing Department ---"""
 
 from enum import Enum
-from typing import (
-    Iterable,
-    Iterator,
-    MutableSequence,
-    NamedTuple,
-    Sequence,
-)
+from typing import Collection, Iterable, Iterator, MutableSequence, NamedTuple, Sequence
 
 MAX_ADJACENT_ROLLS: int = 3
 
@@ -28,12 +22,12 @@ class Cell[T](NamedTuple):
 
 
 class Grid[T]:
-    _data: Sequence[Sequence[T]]
+    _data: MutableSequence[MutableSequence[T]]
 
-    def __init__(self, data: Sequence[Sequence[T]], /) -> None:
+    def __init__(self, data: MutableSequence[MutableSequence[T]], /) -> None:
         self._data = data
 
-    def __getitem__(self, index: int, /) -> Sequence[T]:
+    def __getitem__(self, index: int, /) -> MutableSequence[T]:
         return self._data[index]
 
     def __iter__(self) -> Iterator[Cell[T]]:
@@ -47,6 +41,9 @@ class Grid[T]:
 
     def get(self, x: int, y: int) -> T:
         return self[y][x]
+
+    def set(self, x: int, y: int, value: T) -> None:
+        self[y][x] = value
 
     def contains(self, x: int, y: int) -> bool:
         return 0 <= x < self.size_x and 0 <= y < self.size_y
@@ -80,15 +77,13 @@ class Grid[T]:
     def size_y(self) -> int:
         return len(self._data)
 
-    # @property
-    # def size(self) -> Tuple[int, int]:
-    #     return (self.size_x, self.size_y)
-
 
 def read_input() -> Grid[str]:
     file: Iterable[str]
     with open("input", encoding="utf-8") as file:
-        rows: Sequence[Sequence[str]] = [line.strip() for line in file]
+        rows: MutableSequence[MutableSequence[str]] = [
+            list(line.strip()) for line in file
+        ]
 
         return Grid(rows)
 
@@ -111,13 +106,36 @@ def find_accessible_rolls(grid: Grid[str], /) -> Iterable[Coord]:
             yield coord
 
 
-def solve_part_1() -> int:
-    grid: Grid[str] = read_input()
-
+def solve_part_1(grid: Grid[str], /) -> int:
     return sum(1 for _ in find_accessible_rolls(grid))
 
 
-### Part 1 ###
-part_1: int = solve_part_1()
-print("Part 1:", part_1)
-assert part_1 == 1540
+def solve_part_2(grid: Grid[str], /) -> int:
+    total_rolls_removed: int = 0
+
+    accessible_rolls: Collection[Coord]
+    while accessible_rolls := list(find_accessible_rolls(grid)):
+        coord: Coord
+        for coord in accessible_rolls:
+            grid.set(*coord, CellType.EMPTY)
+            total_rolls_removed += 1
+
+    return total_rolls_removed
+
+
+def main() -> None:
+    grid: Grid[str] = read_input()
+
+    ### Part 1 ###
+    part_1: int = solve_part_1(grid)
+    print("Part 1:", part_1)
+    assert part_1 == 1540
+
+    ### Part 2 ###
+    part_2: int = solve_part_2(grid)
+    print("Part 2:", part_2)
+    assert part_2 == 8972
+
+
+if __name__ == "__main__":
+    main()
