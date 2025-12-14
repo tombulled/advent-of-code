@@ -7,6 +7,7 @@ from typing import (
     Iterator,
     MutableSequence,
     Sequence,
+    Tuple,
 )
 
 RANGE_SEP: Final[str] = "-"
@@ -56,7 +57,7 @@ class RangeTree:
     def __len__(self) -> int:
         return len(self._ranges)
 
-    def add(self, range_: Range, /) -> None:
+    def _get_intersection(self, range_: Range, /) -> Tuple[int, int] | None:
         intersect_index_start: int | None = None
         intersect_index_end: int | None = None
 
@@ -69,49 +70,96 @@ class RangeTree:
             elif intersect_index_start is not None:
                 intersect_index_end = index - 1
                 break
-                
-        new_ranges: MutableSequence[Range]
-        
-        print("Existing Ranges:", self._ranges)
-        print("Adding:", range_)
+
+        if intersect_index_start is None:
+            return None
 
         if intersect_index_end is None:
-            intersect_index_end = len(self)
-        if intersect_index_start is None:
-            if self._ranges and range_ > self._ranges[-1]:
-                new_ranges = self._ranges + [range_]
+            intersect_index_end = len(self)  # start + 1 ??
+
+        return (intersect_index_start, intersect_index_end)
+
+    def add(self, range_: Range, /) -> None:
+        if not self._ranges:
+            self._ranges.append(range_)
+            return
+
+        intersection: Tuple[int, int] | None = self._get_intersection(range_)
+
+        if intersection is None:
+            if range_ < self._ranges[0]:
+                self._ranges.insert(0, range_)
             else:
-                new_ranges = [range_] + self._ranges
+                self._ranges.append(range_)
+            return
+
+        # raise NotImplementedError
+
+        intersection_start: int
+        intersection_end: int
+        intersection_start, intersection_end = intersection
+
+        # intersect_index_start: int | None = None
+        # intersect_index_end: int | None = None
+
+        # 1. Intersects existing range(s)
+        #   1.1. at beginning (may span multiple)
+        #   1.2. in middle (may span multiple)
+        #   1.3. at end (may span multiple)
+        # 2. No intersection with existing range(s)
+        #   2.1. If the new range is less than the first existing range, insert to left
+        #   2.2. Otherwise, append to end
+
+        # index: int
+        # existing_range: Range
+        # for index, existing_range in enumerate(self):
+        #     if existing_range.intersects(range_):
+        #         if intersect_index_start is None:
+        #             intersect_index_start = index
+        #     elif intersect_index_start is not None:
+        #         intersect_index_end = index - 1
+        #         break
+
+        # new_ranges: MutableSequence[Range]
+
+        # print("Existing Ranges:", self._ranges)
+        # print("Adding:", range_)
+
+        # if intersect_index_end is None:
+        #     intersect_index_end = len(self)
+        # if intersect_index_start is None:
+        #     if self._ranges and range_ > self._ranges[-1]:
+        #         new_ranges = self._ranges + [range_]
+        #     else:
+        #         new_ranges = [range_] + self._ranges
+        # else:
+        ranges_left: MutableSequence[Range] = self._ranges[:intersection_start]
+        ranges_intersection: MutableSequence[Range] = self._ranges[
+            intersection_start : intersection_end + 1
+        ]
+        ranges_right: MutableSequence[Range] = self._ranges[
+            intersection_end + 1 :
+        ]
+
+        #     # print(f"Intersection: {intersect_index_start} - {intersect_index_end}")
+        #     print("Left:", ranges_left)
+        #     print("Intersection:", ranges_intersection)
+        #     print("Right:", ranges_right)
+        merged_range: Range
+        if ranges_intersection:
+            merged_range = Range(
+                min=min(range_.min, ranges_intersection[0].min),
+                max=max(range_.max, ranges_intersection[-1].max),
+            )
         else:
-            ranges_left: MutableSequence[Range] = self._ranges[
-                :intersect_index_start
-            ]
-            ranges_intersection: MutableSequence[Range] = self._ranges[
-                intersect_index_start : intersect_index_end + 1
-            ]
-            ranges_right: MutableSequence[Range] = self._ranges[
-                intersect_index_end + 1 :
-            ]
-    
-            # print(f"Intersection: {intersect_index_start} - {intersect_index_end}")
-            print("Left:", ranges_left)
-            print("Intersection:", ranges_intersection)
-            print("Right:", ranges_right)
-            merged_range: Range
-            if ranges_intersection:
-                merged_range = Range(
-                    min=min(range_.min, ranges_intersection[0].min),
-                    max=max(range_.max, ranges_intersection[-1].max),
-                )
-            else:
-                merged_range = range_
-            print("Merged Intersection:", merged_range)
-            
-            # self._ranges = ranges_left + [merged_range] + ranges_right
-            new_ranges = ranges_left + [merged_range] + ranges_right
+            merged_range = range_
+        #     print("Merged Intersection:", merged_range)
+
+        #     # self._ranges = ranges_left + [merged_range] + ranges_right
+        new_ranges = ranges_left + [merged_range] + ranges_right
         self._ranges = new_ranges
-        print("Became:", self._ranges)
-        print()
+        # print("Became:", self._ranges)
+        # print()
 
         # ranges_: MutableSequence[Range] = []
 
@@ -244,26 +292,85 @@ tree: RangeTree = RangeTree()
 #     Range(4, 4),  # 3
 #     Range(5, 5),  # 4
 # ]
-# 
+#
 # tree.add(Range(3, 5))
 # tree.add(Range(10, 14))
 # tree.add(Range(16, 20))
 # tree.add(Range(12, 18))
+#
 
-# tree._ranges = [Range(min=5, max=6)]
-# tree.add(Range(min=2, max=3))
-# assert tree._ranges == [Range(min=2, max=3), Range(min=5, max=6)]
+# No intersection. No existing ranges
+tree._ranges = []
+tree.add(Range(1, 10))
+assert tree._ranges == [Range(1, 10)], tree._ranges
 
-# tree._ranges = [Range(min=2, max=3)]
-# tree.add(Range(min=5, max=6))
-# assert tree._ranges == [Range(min=2, max=3), Range(min=5, max=6)]
+# No intersection. Has existing ranges, new is smaller
+tree._ranges = [Range(3, 4), Range(5, 6)]
+tree.add(Range(1, 2))
+assert tree._ranges == [
+    Range(1, 2),
+    Range(3, 4),
+    Range(5, 6),
+], tree._ranges
+
+# No intersection. Has existing ranges, new is bigger
+tree._ranges = [Range(1, 2), Range(3, 4)]
+tree.add(Range(5, 6))
+assert tree._ranges == [
+    Range(1, 2),
+    Range(3, 4),
+    Range(5, 6),
+], tree._ranges
+
+# No intersection. New is in the middle
+tree._ranges = [Range(1, 2), Range(5, 6)]
+tree.add(Range(3, 4))
+assert tree._ranges == [
+    Range(1, 2),
+    Range(3, 4),
+    Range(5, 6),
+], tree._ranges
+
+# Intersection at beginning
+tree._ranges = [Range(1, 2), Range(3, 4), Range(5, 6)]
+tree.add(Range(0, 3))
+assert tree._ranges == [
+    Range(0, 4),
+    Range(5, 6),
+], tree._ranges
+
+# Intersection in middle
+tree._ranges = [Range(1, 2), Range(3, 4), Range(5, 6), Range(7, 8)]
+tree.add(Range(4, 5))
+assert tree._ranges == [
+    Range(1, 2),
+    Range(3, 6),
+    Range(7, 8),
+], tree._ranges
+
+# Intersection at end
+tree._ranges = [Range(1, 2), Range(3, 4), Range(5, 6)]
+tree.add(Range(4, 7))
+assert tree._ranges == [
+    Range(1, 2),
+    Range(3, 7),
+], tree._ranges
+
+# Dupe
+tree._ranges = [Range(1, 2)]
+tree.add(Range(1, 2))
+assert tree._ranges == [
+    Range(1, 2),
+], tree._ranges
+
+tree._ranges = []
 
 # print(tree._ranges)
 
 for fresh_range in database.fresh_id_ranges:
     tree.add(fresh_range)
-    # input()
-    
+# input()
+
 total = sum(range_.count() for range_ in tree)
 # 347316087434620 is too high
 # 347124802374240 is too high
