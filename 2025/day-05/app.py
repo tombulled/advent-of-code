@@ -77,7 +77,7 @@ class RangeTree:
             elif existing_range > range_:
                 index_gt = index
                 break
-                
+
         index_start: int = index_lt + 1 if index_lt is not None else 0
         index_end: int = index_gt if index_gt is not None else len(self._ranges)
 
@@ -97,17 +97,15 @@ class RangeTree:
         print("Adding:", range_)
         print("Coords:", (insert_start, insert_end))
 
-        intersection: Sequence[Range] = self._ranges[
-            insert_start : insert_end
-        ]
-        
+        intersection: Sequence[Range] = self._ranges[insert_start:insert_end]
+
         print("Intersection:", intersection)
 
         merged_range = Range(
             min=min(range_.min, intersection[0].min),
             max=max(range_.max, intersection[-1].max),
         )
-        
+
         self._ranges[insert_start:insert_end] = [merged_range]
 
         # raise NotImplementedError
@@ -407,3 +405,5 @@ for fresh_range in database.fresh_id_ranges:
 total = sum(range_.count() for range_ in tree)
 # 347316087434620 is too high
 # 347124802374240 is too high
+
+assert total == 344486348901788
