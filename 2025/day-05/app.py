@@ -11,12 +11,23 @@ SECTION_SEP: Final[str] = "\n\n"
 class Range:
     min: int
     max: int
+    
+    def contains(self, value: int, /) -> bool:
+        return self.min <= value <= self.max
 
 
 @dataclass
 class Database:
     fresh_id_ranges: Sequence[Range]
     available_ids: Sequence[int]
+    
+    def is_fresh(self, id_: int, /) -> bool:
+        fresh_id_range: Range
+        for fresh_id_range in self.fresh_id_ranges:
+            if fresh_id_range.contains(id_):
+                return True
+                
+        return False
 
 
 def parse_range(range_: str) -> Range:
@@ -55,5 +66,15 @@ def read_input() -> ...:
     with open("input", encoding="utf-8") as file:
         return parse_input(file.read())
 
+def solve_part_1() -> int:
+    database: Database = read_input()
+    
+    return sum(
+        database.is_fresh(ingredient_id)
+        for ingredient_id in database.available_ids
+    )
 
-d = read_input()
+### Part 1 ###
+part_1: int = solve_part_1()
+print("Part 1:", part_1)
+assert part_1 == 739
