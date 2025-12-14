@@ -1,7 +1,14 @@
 """--- Day 5: Cafeteria ---"""
 
 from dataclasses import dataclass
-from typing import Final, Iterable, MutableSequence, Sequence
+from typing import (
+    Final,
+    Iterable,
+    Iterator,
+    MutableSequence,
+    MutableSet,
+    Sequence,
+)
 
 RANGE_SEP: Final[str] = "-"
 SECTION_SEP: Final[str] = "\n\n"
@@ -11,7 +18,10 @@ SECTION_SEP: Final[str] = "\n\n"
 class Range:
     min: int
     max: int
-    
+
+    def __iter__(self) -> Iterator[int]:
+        return iter(range(self.min, self.max + 1))
+
     def contains(self, value: int, /) -> bool:
         return self.min <= value <= self.max
 
@@ -20,13 +30,13 @@ class Range:
 class Database:
     fresh_id_ranges: Sequence[Range]
     available_ids: Sequence[int]
-    
+
     def is_fresh(self, id_: int, /) -> bool:
         fresh_id_range: Range
         for fresh_id_range in self.fresh_id_ranges:
             if fresh_id_range.contains(id_):
                 return True
-                
+
         return False
 
 
@@ -66,15 +76,29 @@ def read_input() -> ...:
     with open("input", encoding="utf-8") as file:
         return parse_input(file.read())
 
-def solve_part_1() -> int:
-    database: Database = read_input()
-    
+
+def solve_part_1(database: Database, /) -> int:
     return sum(
         database.is_fresh(ingredient_id)
         for ingredient_id in database.available_ids
     )
 
-### Part 1 ###
-part_1: int = solve_part_1()
-print("Part 1:", part_1)
-assert part_1 == 739
+
+def solve_part_2(database: Database, /) -> int:
+    fresh_ids: MutableSet[int] = set()
+
+    fresh_id_range: Range
+    for fresh_id_range in database.fresh_id_ranges:
+        fresh_ids.update(fresh_id_range)
+        
+    return fresh_ids # temp
+
+
+database: Database = read_input()
+
+# ### Part 1 ###
+# part_1: int = solve_part_1(database)
+# print("Part 1:", part_1)
+# assert part_1 == 739
+
+d = solve_part_2(database)
