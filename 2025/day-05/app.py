@@ -35,8 +35,12 @@ class Range:
 class RangeTree:
     _ranges: MutableSequence[Range]
 
-    def __init__(self) -> None:
+    def __init__(self, ranges: Iterable[Range] | None = None, /) -> None:
         self._ranges = []
+
+        if ranges is not None:
+            for range_ in ranges:
+                self.add(range_)
 
     def __iter__(self) -> Iterator[Range]:
         yield from self._ranges
@@ -86,30 +90,19 @@ class RangeTree:
 
         self._ranges[insert_start:insert_end] = [merged_range]
 
-    # def get(self, value: int, /) -> Range | None:
-    #     range_: Range
-    #     for range_ in self._ranges:
-    #         if range_.contains(value):
-    #             return range_
+    def contains(self, value: int, /) -> bool:
+        range_: Range
+        for range_ in self._ranges:
+            if range_.contains(value):
+                return True
 
-    #     return None
-
-    # def contains(self, value: int, /) -> bool:
-    #     return self._get(value) is not None
+        return False
 
 
 @dataclass
 class Database:
     fresh_id_ranges: Sequence[Range]
     available_ids: Sequence[int]
-
-    def is_fresh(self, id_: int, /) -> bool:
-        fresh_id_range: Range
-        for fresh_id_range in self.fresh_id_ranges:
-            if fresh_id_range.contains(id_):
-                return True
-
-        return False
 
 
 def parse_range(range_: str) -> Range:
@@ -149,16 +142,13 @@ def read_input() -> ...:
         return parse_input(file.read())
 
 
-def solve_part_1(database: Database, /) -> int:
+def solve_part_1(database: Database, tree: RangeTree) -> int:
     return sum(
-        database.is_fresh(ingredient_id)
-        for ingredient_id in database.available_ids
+        tree.contains(ingredient_id) for ingredient_id in database.available_ids
     )
 
 
-def solve_part_2(database: Database, /) -> int:
-    tree: RangeTree = RangeTree()
-
+def solve_part_2(database: Database, tree: RangeTree) -> int:
     for fresh_range in database.fresh_id_ranges:
         tree.add(fresh_range)
 
@@ -166,13 +156,14 @@ def solve_part_2(database: Database, /) -> int:
 
 
 database: Database = read_input()
+tree: RangeTree = RangeTree(database.fresh_id_ranges)
 
 ### Part 1 ###
-part_1: int = solve_part_1(database)
+part_1: int = solve_part_1(database, tree)
 print("Part 1:", part_1)
 assert part_1 == 739
 
 ### Part 2 ###
-part_2: int = solve_part_2(database)
+part_2: int = solve_part_2(database, tree)
 print("Part 2:", part_2)
 assert part_2 == 344486348901788
