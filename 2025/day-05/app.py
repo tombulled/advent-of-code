@@ -60,18 +60,12 @@ class RangeTree:
     def _get_insertion_coords(self, range_: Range, /) -> Tuple[int, int]:
         # 1. Insert at the beginning
         if not self._ranges or range_ < self._ranges[0]:
-            self._ranges.insert(0, range_)
-            return
+            return (0,) * 2
 
         # 2. Insert at the end
         if range_ > self._ranges[-1]:
-            self._ranges.append(range_)
-            return
+            return (len(self._ranges),) * 2
 
-        # intersect_index_start: int | None = None
-        # intersect_index_end: int | None = None
-        # index_insert_start: int | None = None
-        # index_insert_end: int
         index_lt: int | None = None
         index_gt: int | None = None
 
@@ -83,63 +77,41 @@ class RangeTree:
             elif existing_range > range_:
                 index_gt = index
                 break
+                
+        index_start: int = index_lt + 1 if index_lt is not None else 0
+        index_end: int = index_gt if index_gt is not None else len(self._ranges)
 
-        assert index_lt is not None
-        assert index_gt is not None
+        # 3. Insert in the middle (might span either end)
+        return (index_start, index_end)
 
-        # ranges_left: MutableSequence[Range] = self._ranges[: index_lt + 1]
-        # ranges_intersection: MutableSequence[Range] = self._ranges[
-        #     index_lt + 1 : index_gt
-        # ]
-        # ranges_right: MutableSequence[Range] = self._ranges[index_gt:]
+    def add(self, range_: Range, /) -> None:
+        insert_start: int
+        insert_end: int
+        insert_start, insert_end = self._get_insertion_coords(range_)
 
-        # print("Left:", ranges_left)
-        # print("Intersection:", ranges_intersection)
-        # print("Right:", ranges_right)
+        if insert_start == insert_end:
+            self._ranges.insert(insert_start, range_)
+            return
 
-        # Insert in the middle (no intersection)
-        # if not ranges_intersection:
-        #     return (index_gt, index_gt)
+        print("Existing:", self._ranges)
+        print("Adding:", range_)
+        print("Coords:", (insert_start, insert_end))
 
-        # Insert in the middle
-        return (index_lt + 1, index_gt)
+        intersection: Sequence[Range] = self._ranges[
+            insert_start : insert_end
+        ]
+        
+        print("Intersection:", intersection)
 
-        # merged_range = Range(
-        #     min=min(range_.min, ranges_intersection[0].min),
-        #     max=max(range_.max, ranges_intersection[-1].max),
-        # )
-
-        # if index_gt is None:
-        #     index_gt = len(self._ranges)
-
-        # if existing_range.intersects(range_):
-        #     if intersect_index_start is None:
-        #         intersect_index_start = index
-        # elif intersect_index_start is not None:
-        #     intersect_index_end = index - 1
-        #     break
-
-        # # 1. No Intersection
-        # if intersect_index_start is None:
-        #     # 1.1. Insert at the beginning
-        #     if not self._ranges or range_ < self._ranges[0]:
-        #         # self._ranges.insert(0, range_)
-        #         return (0, 0)
-        #     # 1.2. Insert at the end
-        #     else:
-        #         ranges_len: int = len(self._ranges)
-        #         return (ranges_len, ranges_len)
-        #     return
+        merged_range = Range(
+            min=min(range_.min, intersection[0].min),
+            max=max(range_.max, intersection[-1].max),
+        )
+        
+        self._ranges[insert_start:insert_end] = [merged_range]
 
         # raise NotImplementedError
 
-        # if intersect_index_end is None:
-        #     intersect_index_end = len(self)  # start + 1 ??
-
-        # return (intersect_index_start, intersect_index_end)
-
-    def add(self, range_: Range, /) -> None:
-        self._get_insertion_coords(range_)
         return
         if not self._ranges:
             self._ranges.append(range_)
