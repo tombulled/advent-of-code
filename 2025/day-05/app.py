@@ -25,11 +25,11 @@ class Range:
     def __lt__(self, rhs: "Range", /) -> bool:
         return self.max < rhs.min
 
-    def contains(self, value: int, /) -> bool:
-        return self.min <= value <= self.max
-
-    def count(self) -> int:
+    def __len__(self) -> int:
         return self.max - self.min + 1
+
+    def __contains__(self, value: int, /) -> bool:
+        return self.min <= value <= self.max
 
 
 class RangeTree:
@@ -54,8 +54,8 @@ class RangeTree:
         if range_ > self._ranges[-1]:
             return (len(self._ranges),) * 2
 
-        index_lt: int | None = None
-        index_gt: int | None = None
+        index_lt: int | None = None  # index of last range less than `range_`
+        index_gt: int | None = None  # index of first range greater than `range_
 
         index: int
         existing_range: Range
@@ -77,26 +77,23 @@ class RangeTree:
         insert_end: int
         insert_start, insert_end = self._get_insertion_coords(range_)
 
+        # 1. Single position to insert into (no intersection)
         if insert_start == insert_end:
             self._ranges.insert(insert_start, range_)
             return
 
+        # 2. The new range intersects existing range(s) - create a single
+        # merged range (including the new range) and insert this in place
+        # of the intersection.
         intersection: Sequence[Range] = self._ranges[insert_start:insert_end]
-
-        merged_range = Range(
+        merged_range: Range = Range(
             min=min(range_.min, intersection[0].min),
             max=max(range_.max, intersection[-1].max),
         )
-
         self._ranges[insert_start:insert_end] = [merged_range]
 
     def contains(self, value: int, /) -> bool:
-        range_: Range
-        for range_ in self._ranges:
-            if range_.contains(value):
-                return True
-
-        return False
+        return any(value in range_ for range_ in self._ranges)
 
 
 @dataclass
@@ -148,22 +145,24 @@ def solve_part_1(database: Database, tree: RangeTree) -> int:
     )
 
 
-def solve_part_2(database: Database, tree: RangeTree) -> int:
-    for fresh_range in database.fresh_id_ranges:
-        tree.add(fresh_range)
-
-    return sum(range_.count() for range_ in tree)
+def solve_part_2(tree: RangeTree) -> int:
+    return sum(len(range_) for range_ in tree)
 
 
-database: Database = read_input()
-tree: RangeTree = RangeTree(database.fresh_id_ranges)
+def main() -> None:
+    database: Database = read_input()
+    tree: RangeTree = RangeTree(database.fresh_id_ranges)
 
-### Part 1 ###
-part_1: int = solve_part_1(database, tree)
-print("Part 1:", part_1)
-assert part_1 == 739
+    ### Part 1 ###
+    part_1: int = solve_part_1(database, tree)
+    print("Part 1:", part_1)
+    assert part_1 == 739
 
-### Part 2 ###
-part_2: int = solve_part_2(database, tree)
-print("Part 2:", part_2)
-assert part_2 == 344486348901788
+    ### Part 2 ###
+    part_2: int = solve_part_2(tree)
+    print("Part 2:", part_2)
+    assert part_2 == 344486348901788
+
+
+if __name__ == "__main__":
+    main()
