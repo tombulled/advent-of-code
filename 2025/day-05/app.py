@@ -1,14 +1,7 @@
 """--- Day 5: Cafeteria ---"""
 
 from dataclasses import dataclass
-from typing import (
-    Final,
-    Iterable,
-    Iterator,
-    MutableSequence,
-    Sequence,
-    Tuple,
-)
+from typing import Final, Iterable, Iterator, MutableSequence, Sequence, Tuple
 
 RANGE_SEP: Final[str] = "-"
 SECTION_SEP: Final[str] = "\n\n"
@@ -122,9 +115,8 @@ def parse_input(input_: str, /) -> Database:
         parse_range(raw_fresh_id_range)
         for raw_fresh_id_range in raw_fresh_id_ranges.splitlines()
     ]
-    available_ids: MutableSequence[Range] = [
-        int(raw_available_id)
-        for raw_available_id in raw_available_ids.splitlines()
+    available_ids: MutableSequence[int] = [
+        int(raw_available_id) for raw_available_id in raw_available_ids.splitlines()
     ]
 
     return Database(
@@ -133,16 +125,14 @@ def parse_input(input_: str, /) -> Database:
     )
 
 
-def read_input() -> ...:
+def read_input() -> Database:
     file: Iterable[str]
     with open("input", encoding="utf-8") as file:
         return parse_input(file.read())
 
 
 def solve_part_1(database: Database, tree: RangeTree) -> int:
-    return sum(
-        tree.contains(ingredient_id) for ingredient_id in database.available_ids
-    )
+    return sum(tree.contains(ingredient_id) for ingredient_id in database.available_ids)
 
 
 def solve_part_2(tree: RangeTree) -> int:
