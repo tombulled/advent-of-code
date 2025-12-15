@@ -21,14 +21,14 @@ class Operator(Enum):
     def __init__(self, symbol: str, func: OperatorFunc) -> None:
         self.symbol = symbol
         self.func = func
-        
+
     @classmethod
     def from_symbol(cls, symbol: str, /) -> "Operator":
         member: Operator
         for member in cls:
             if member.symbol == symbol:
                 return member
-            
+
         raise ValueError(f"No such operator with symbol {symbol!r}")
 
 
@@ -61,16 +61,11 @@ def read_input() -> Iterable[Problem]:
         return parse_input(file.read())
 
 
-# problems = parse_input("""123 328  51 64 
-#  45 64  387 23 
-#   6 98  215 314
-# *   +   *   +  """)
-problems = read_input()
+def solve_part_1() -> int:
+    return sum(problem.solve() for problem in read_input())
 
-grand_total: int = sum(
-    problem.solve()
-    for problem in problems
-)
 
-print("Grand Total:", grand_total)
-assert grand_total == 5227286044585
+### Part 1 ###
+part_1: int = solve_part_1()
+print("Part 1:", part_1)
+assert part_1 == 5227286044585
