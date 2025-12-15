@@ -99,8 +99,17 @@ def solve_problem_part_1(problem: Problem, /) -> int:
 
 
 def solve_problem_part_2(problem: Problem, /) -> int:
-    print("Operands:", problem.operands)
-    return 0
+    # Flip the order of the operands (right-to-left baby!)
+    operands_rtl: Sequence[str] = [
+        operand[::-1] for operand in problem.operands
+    ]
+
+    # Read the operands as columns
+    operands: Sequence[int] = [
+        int("".join(column)) for column in zip(*operands_rtl)
+    ]
+
+    return functools.reduce(problem.operator.func, operands)
 
 
 def calculate_grand_total(
@@ -117,23 +126,14 @@ def solve_part_2(problems: Sequence[Problem], /) -> int:
     return calculate_grand_total(problems, solve_problem_part_2)
 
 
-problems: Sequence[Problem] = read_input()
-# problems: Sequence[Problem] = parse_input("""123 328  51 64 
-#  45 64  387 23 
-#   6 98  215 314
-# *   +   *   +  """)
-# d = problems
-
-# for p in d:
-#     print(p)
+problems: Sequence[Problem] = list(read_input())
 
 ### Part 1 ###
 part_1: int = solve_part_1(problems)
 print("Part 1:", part_1)
 assert part_1 == 5227286044585
 
-### Part 2 ###
-# part_2: int = solve_part_2(problems)
-# print("Part 2:", part_2)
-# assert part_2 == -1
-# assert part_2 == 3263827
+## Part 2 ###
+part_2: int = solve_part_2(problems)
+print("Part 2:", part_2)
+assert part_2 == 10227753257799
