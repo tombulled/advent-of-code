@@ -4,7 +4,7 @@ import functools
 import operator
 from dataclasses import dataclass
 from enum import Enum
-from typing import Iterable, Protocol, Sequence
+from typing import Iterable, MutableSequence, Protocol, Sequence
 
 
 class OperatorFunc(Protocol):
@@ -42,16 +42,46 @@ class Problem:
     operands: Sequence[str]
 
 
-def parse_input(input_: str, /) -> Iterable[Problem]:
-    rows: Sequence[Sequence[str]] = [
-        line.split() for line in input_.splitlines()
-    ]
+def parse_numbers(numbers_lines: Sequence[str], /) -> Sequence[Sequence[str]]:
+    all_numbers: MutableSequence[Sequence[str]] = []
 
-    numbers: Sequence[str]
+    numbers: MutableSequence[str] = []
+
+    column: Sequence[str]
+    for column in zip(*numbers_lines):
+        is_separator: bool = all(character == " " for character in column)
+
+        if is_separator:
+            all_numbers.append(numbers)
+            numbers = []
+            continue
+
+        if not numbers:
+            numbers = [""] * len(column)
+
+        operand_index: int
+        character: str
+        for operand_index, character in enumerate(column):
+            numbers[operand_index] += character
+
+    if numbers:
+        all_numbers.append(numbers)
+
+    return list(zip(*all_numbers))
+
+
+def parse_input(input_: str, /) -> Iterable[Problem]:
+    numbers_lines: Sequence[str]
+    symbols_line: str
+    *numbers_lines, symbols_line = input_.splitlines()
+
+    numbers: Sequence[Sequence[str]] = parse_numbers(numbers_lines)
+    symbols: Sequence[str] = symbols_line.split()
+
+    operands: Sequence[str]
     symbol: str
-    for *numbers, symbol in zip(*rows):
+    for *operands, symbol in zip(*numbers, symbols):
         operator: Operator = Operator.from_symbol(symbol)
-        operands: Sequence[int] = [int(number) for number in numbers]
 
         yield Problem(operator, operands)
 
@@ -69,7 +99,8 @@ def solve_problem_part_1(problem: Problem, /) -> int:
 
 
 def solve_problem_part_2(problem: Problem, /) -> int:
-    return -1
+    print("Operands:", problem.operands)
+    return 0
 
 
 def calculate_grand_total(
@@ -87,8 +118,22 @@ def solve_part_2(problems: Sequence[Problem], /) -> int:
 
 
 problems: Sequence[Problem] = read_input()
+# problems: Sequence[Problem] = parse_input("""123 328  51 64 
+#  45 64  387 23 
+#   6 98  215 314
+# *   +   *   +  """)
+# d = problems
+
+# for p in d:
+#     print(p)
 
 ### Part 1 ###
 part_1: int = solve_part_1(problems)
 print("Part 1:", part_1)
 assert part_1 == 5227286044585
+
+### Part 2 ###
+# part_2: int = solve_part_2(problems)
+# print("Part 2:", part_2)
+# assert part_2 == -1
+# assert part_2 == 3263827
