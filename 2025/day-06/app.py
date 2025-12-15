@@ -11,6 +11,10 @@ class OperatorFunc(Protocol):
     def __call__(self, a: int, b: int, /) -> int: ...
 
 
+class ProblemSolver(Protocol):
+    def __call__(self, problem: "Problem", /) -> int: ...
+
+
 class Operator(Enum):
     symbol: str
     func: OperatorFunc
@@ -35,10 +39,7 @@ class Operator(Enum):
 @dataclass
 class Problem:
     operator: Operator
-    operands: Sequence[int]
-
-    def solve(self) -> int:
-        return functools.reduce(self.operator.func, self.operands)
+    operands: Sequence[str]
 
 
 def parse_input(input_: str, /) -> Iterable[Problem]:
@@ -61,11 +62,33 @@ def read_input() -> Iterable[Problem]:
         return parse_input(file.read())
 
 
-def solve_part_1() -> int:
-    return sum(problem.solve() for problem in read_input())
+def solve_problem_part_1(problem: Problem, /) -> int:
+    operands: Sequence[int] = [int(operand) for operand in problem.operands]
 
+    return functools.reduce(problem.operator.func, operands)
+
+
+def solve_problem_part_2(problem: Problem, /) -> int:
+    return -1
+
+
+def calculate_grand_total(
+    problems: Sequence[Problem], solver: ProblemSolver
+) -> int:
+    return sum(solver(problem) for problem in problems)
+
+
+def solve_part_1(problems: Sequence[Problem], /) -> int:
+    return calculate_grand_total(problems, solve_problem_part_1)
+
+
+def solve_part_2(problems: Sequence[Problem], /) -> int:
+    return calculate_grand_total(problems, solve_problem_part_2)
+
+
+problems: Sequence[Problem] = read_input()
 
 ### Part 1 ###
-part_1: int = solve_part_1()
+part_1: int = solve_part_1(problems)
 print("Part 1:", part_1)
 assert part_1 == 5227286044585
