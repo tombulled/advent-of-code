@@ -126,14 +126,19 @@ def solve_part_2(problems: Sequence[Problem], /) -> int:
     return calculate_grand_total(problems, solve_problem_part_2)
 
 
-problems: Sequence[Problem] = list(read_input())
+def main() -> None:
+    problems: Sequence[Problem] = list(read_input())
 
-### Part 1 ###
-part_1: int = solve_part_1(problems)
-print("Part 1:", part_1)
-assert part_1 == 5227286044585
+    ### Part 1 ###
+    part_1: int = solve_part_1(problems)
+    print("Part 1:", part_1)
+    assert part_1 == 5227286044585
 
-## Part 2 ###
-part_2: int = solve_part_2(problems)
-print("Part 2:", part_2)
-assert part_2 == 10227753257799
+    ## Part 2 ###
+    part_2: int = solve_part_2(problems)
+    print("Part 2:", part_2)
+    assert part_2 == 10227753257799
+
+
+if __name__ == "__main__":
+    main()
